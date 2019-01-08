@@ -35,9 +35,9 @@ const sketch = () => {
   };
 
   return ({ context, width, height }) => {
-    // p5.background(0);
-    // p5.fill(255);
-    // p5.noStroke();
+    context.fillStyle = "hsl(0, 0%, 98%)";
+    context.fillRect(0, 0, width, height);
+
     context.save();
     context.translate(width / 10, height / 12);
     for (let month = 0; month < 12; month++) {
