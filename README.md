@@ -4,6 +4,7 @@ I am trying to learn to generate nice images with [canvas-sketch](https://github
 
 Painting the sun trajectories (altitude in this case only) through the months. This is a work in progress.
 
+![Sun trajectories in Madrid and Helsinki](example.png)
 # How to run it:
 
 1. Install the npm deps
