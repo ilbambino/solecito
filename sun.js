@@ -1,14 +1,46 @@
 const canvasSketch = require("canvas-sketch");
+const random = require("canvas-sketch-util/random");
 const SunCalc = require("suncalc");
 
 const background = "hsl(0, 0%, 98%)";
 const settings = {
   dimensions: [2048, 2048]
 };
+random.setSeed(random.getRandomSeed());
+// random.setSeed(919014);
+console.log("seed", random.getSeed());
 
 Date.prototype.addDays = function(days) {
   this.setDate(this.getDate() + parseInt(days));
   return this;
+};
+const sunHours = (date, lat, long) => {
+  let times = SunCalc.getTimes(date, lat, long);
+  const sunrise = times.sunrise;
+  const sunset = times.sunset;
+
+  let millSecsSunc = sunset - sunrise;
+  if (isNaN(millSecsSunc)) {
+    millSecsSunc = 0;
+  }
+  return millSecsSunc / (1000 * 60 * 60);
+};
+
+const getDiffSunHours = (stepDays, lat1, long1, lat2, long2) => {
+  const hours = [];
+
+  let date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setMonth(0);
+  date.setDate(21);
+
+  for (let day = 0; day < 366; day += stepDays) {
+    const hours1 = sunHours(date, lat1, long1);
+    const hours2 = sunHours(date, lat2, long2);
+    hours.push(Math.abs(hours1 - hours2));
+    date.addDays(stepDays);
+  }
+  return hours;
 };
 
 const sketch = () => {
@@ -21,15 +53,7 @@ const sketch = () => {
     date.setDate(21);
 
     for (let day = 0; day < 366; day += stepDays) {
-      let times = SunCalc.getTimes(date, lat, long);
-      const sunrise = times.sunrise;
-      const sunset = times.sunset;
-
-      let millSecsSunc = sunset - sunrise;
-      if (isNaN(millSecsSunc)) {
-        millSecsSunc = 0;
-      }
-      hours.push(millSecsSunc / (1000 * 60 * 60));
+      hours.push(sunHours(date, lat, long));
       date.addDays(stepDays);
     }
     console.log(date, lat, long, hours);
@@ -84,24 +108,46 @@ const sketch = () => {
   return ({ context, width, height }) => {
     context.fillStyle = background;
     context.fillRect(0, 0, width, height);
-    context.translate(200, 1650);
-    for (let lat = -60; lat < 70; lat = lat + 10) {
-      context.save();
-      context.translate(0, Math.abs(lat) * -28);
-      const hours = hoursToCoords(getSunHours(10, lat, 3.7), width, height);
-      console.log(hours);
+    context.translate(200, 1950);
+
+    for (let lines = 1; lines < 11; lines++) {
+      context.translate(0, lines * (-height / 65));
+
+      const hours = hoursToCoords(
+        getDiffSunHours(
+          7,
+          random.range(0, 60),
+          random.range(0, 90),
+          random.range(0, 60),
+          random.range(0, 90)
+        ),
+        width,
+        height
+      );
       context.strokeStyle = "black";
       context.lineWidth = 3;
 
       drawCurve(context, hours); // add cardinal spline to path
-
-      // context.fillStyle = "black";
-      // context.font = "50px serif";
-      // context.fillText("" + lat, -50, 28  0);
-
       context.stroke();
-      context.restore();
     }
+
+    // for (let lat = -60; lat < 70; lat = lat + 10) {
+    //   context.save();
+    //   context.translate(0, Math.abs(lat) * -28);
+    //   const hours = hoursToCoords(getSunHours(10, lat, 3.7), width, height);
+    //   console.log(hours);
+    //   context.strokeStyle = "black";
+    //   context.lineWidth = 3;
+
+    //   drawCurve(context, hours); // add cardinal spline to path
+
+    //   // context.fillStyle = "black";
+    //   // context.font = "50px serif";
+    //   // context.fillText("" + lat, -50, 28  0);
+
+    //   context.stroke();
+    //   context.restore();
+    // }
 
     // for (let month = 0; month < 12; month = month + 1.5) {
     //   const day = new Date();
